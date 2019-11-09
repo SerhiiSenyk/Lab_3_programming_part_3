@@ -58,159 +58,38 @@ In :
 	Out :
 11*/
 
-//На етапі X опрацьовувати всі вершини з відстанню Х від початкової
-
-#include <iostream>
-#include <vector>
-#include <queue>
-#include <map>
-
-using namespace std;
-struct Vertex;
-int** readWithFile(int &countEdges, int &startVertex);
-void display(int **graph, const int countEdges);
-int BFS(map <int, vector<int>> list, map <int, Vertex> &vertex, const int start);
-void printAdjacencyList(map <int, vector<int>> list);  
-void convertToAdjacencyList(int **graph, map <int, vector<int>> &list, int countEdges);
-
-struct Vertex {
-	int lenghtFromStart;
-	int previousVertex;
-	bool isVisited;
-};
-
-void printPath(map <int, Vertex> vertex, const int start, int key);
-
+#include "graph.h"
 int main()
 {
-	const int N = 2;
-	int countEdges ,startVertex;
-	int **graph = readWithFile(countEdges, startVertex);
-	display(graph, countEdges);
+	int countEdges, startVertex;
 	map <int, vector<int>> list;
-	map <int, Vertex> vertex;
-	convertToAdjacencyList(graph, list, countEdges);
+	map <int, Vertex> vertexes;
+	//char fileName[30] = "graph.txt";
+	char fileName[300] = "D:\\Internet of Things\\Semestr #3\\Algorithms\\Lab_3\\bfs_example_3.txt";
+	readWithFile(fileName, list, countEdges, startVertex);
+	printf("Adjacency list:\n");
 	printAdjacencyList(list);
-	int maxLenght = BFS(list, vertex, startVertex);
-
-	for (auto i : list) {
-		cout << i.first << " " << vertex[i.first].lenghtFromStart << endl;
+	printf("\nCount vertex : %d\n", list.size());
+	printf("Count edges : %d\n", countEdges);
+	printf("Start vertex : %d\n\n", startVertex);
+	int maxLenght = BFS(list, vertexes, startVertex);
+	printf("Result :\n");
+	printf("vertex, |lenght, visited\n");
+	for (auto i : vertexes) {
+		printf("%4d\t|%4d\t   %-5s\n", 
+			i.first, vertexes[i.first].lenghtFromStart, 
+			vertexes[i.first].isVisited == true? "yes":"no");
 	}
-	for (auto i : list) {
-		cout << i.first << " " << vertex[i.first].isVisited << endl;
-	}
-	cout << "Max lenght = " << maxLenght << endl;
-	for (auto it : vertex) {
-		if (vertex[it.first].lenghtFromStart == maxLenght) {
+	cout << "\nMax lenght = " << maxLenght << endl;
+	for (auto it : vertexes) {
+		if (vertexes[it.first].lenghtFromStart == maxLenght) {
 			cout << "Vertex : " << it.first << endl;
 			cout << "Path from start vertex : ";
 			int key = it.first;
-			printPath(vertex, startVertex, key);
+			printPath(vertexes, startVertex, key);
 			cout << endl;
 		}
 	}
-
-	for (int i = 0; i < countEdges; ++i) {
-		free(graph[i]);
-	}
-	free(graph);
 	system("pause");
 	return 0;
-}
-
-void convertToAdjacencyList(int **graph, map<int, vector<int>> &list, int countEdges)
-{
-	for (int i = 0; i < countEdges; ++i) {
-		list[graph[i][0]].push_back(graph[i][1]);
-		list[graph[i][1]];
-	}
-	return;
-}
-
-void printAdjacencyList(map <int, vector<int>> list)
-{
-	cout << "countVertex : " << list.size() << endl;
-	for (auto it : list) {
-		cout << it.first << " | ";
-		for (int j = 0; j < list[it.first].size(); ++j)
-			cout << list[it.first][j] << " ";
-		cout << endl;
-	}
-	return;
-}
-
-int BFS(map <int, vector<int>> list, map <int, Vertex> &vertex, const int start)
-{
-	int v, maxLenght;
-	queue<int> queue;
-	queue.push(start);
-	for (auto it : list) {
-		vertex[it.first].isVisited = false;
-		vertex[it.first].lenghtFromStart = -1;
-	}
-	vertex[start].isVisited = true;
-	vertex[start].lenghtFromStart = maxLenght = 0;
-	vertex[start].previousVertex = start;
-	while (!queue.empty()) {
-		v = queue.front();
-		queue.pop();
-		for (int k = 0; k < list[v].size(); ++k) {
-			int neighbor = list[v][k];
-			if (!vertex[neighbor].isVisited) {
-				queue.push(neighbor);
-				vertex[neighbor].isVisited = true;
-				vertex[neighbor].lenghtFromStart = vertex[v].lenghtFromStart + 1;
-				vertex[neighbor].previousVertex = v;
-				if (vertex[neighbor].lenghtFromStart > maxLenght) {
-					maxLenght = vertex[neighbor].lenghtFromStart;
-				}
-			}
-		}
-	}
-	return maxLenght;
-}
-
-int **readWithFile(int &countEdges, int &startVertex)
-{
-	FILE *ptrFile = NULL;
-	fopen_s(&ptrFile, "graph.txt", "r");
-	if (ptrFile == NULL) {
-		perror("Error open file <graph.txt> ");
-		system("pause");
-		exit(0);
-	}
-	fscanf_s(ptrFile, "%d %d", &countEdges, &startVertex);
-	if (countEdges < 0 || countEdges > 10000)
-		exit(0);
-	int **graph = (int**)calloc(countEdges, sizeof(int*));
-	for (int i = 0; i < countEdges; ++i)
-		graph[i] = (int*)calloc(2, sizeof(int));
-	int i = 0;
-	while (!feof(ptrFile)) {
-		fscanf_s(ptrFile, "%d %d", &graph[i][0], &graph[i][1]);
-		++i;
-	}
-	fclose(ptrFile);
-	return graph;
-}
-
-void printPath(map <int, Vertex> vertex, const int start, int key)
-{
-	if (key != start) {
-		printPath(vertex, start, vertex[key].previousVertex);
-		cout << " - ";
-	}
-	cout << key;
-}
-
-void display(int **graph, const int countEdges)
-{
-	printf("In :\n");
-	cout << countEdges << endl;
-	for (int i = 0; i < countEdges; ++i) {
-		for (int j = 0; j < 2; ++j)
-			cout << graph[i][j] << "  ";
-		cout << endl;
-	}
-	cout << endl;
 }
